@@ -22,7 +22,7 @@ import org.testng.annotations.Test;
  */
 public class TestSuiteA {
 
-    final static private boolean isMusicApp = false;
+    final static private boolean isMusicApp = true;
 
     private WebDriver driver;
     private String autHost;
