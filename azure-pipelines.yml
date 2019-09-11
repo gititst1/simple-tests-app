@@ -4,19 +4,64 @@
 # https://docs.microsoft.com/azure/devops/pipelines/languages/java
 
 trigger:
-- master
+  #- master
+    none
+# dasda
+variables:
+  InjectAlmOctaneTasks: 'true'
+  
+jobs:
+- job: AlmOctanePipelineStart
+  condition: always()
+  steps:
+  - script: echo ${{ variables['InjectAlmOctaneJobEvents'] }}
+  - bash: echo "AlmOctanePipelineStart"
+  
+- job: A
+  dependsOn: AlmOctanePipelineStart
+  steps:
+  - bash: echo "A"
 
-pool:
-  vmImage: 'ubuntu-latest'
+- job: B
+  dependsOn: AlmOctanePipelineStart
+  steps:
+  - bash: echo "B"
 
-steps:
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.8'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
-    goals: 'package'
+- job: C
+  dependsOn: AlmOctanePipelineStart
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - task: CmdLine@2
+    inputs:
+      script: |
+        echo Build.BuildId=$(Build.BuildId)
+        echo Build.BuildNumber=$(Build.BuildNumber)
+        echo System.AccessToken=$(System.AccessToken)
+        echo Hello world
+  - task: Maven@3
+    inputs:
+      mavenPomFile: 'pom.xml'
+      mavenOptions: '-Xmx3072m'
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '1.8'
+      jdkArchitectureOption: 'x64'
+      publishJUnitResults: true
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      goals: 'package'
+  - task: PublishTestResults@2
+    condition: always()
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      mergeTestResults: true
+
+- job: AlmOctanePipelineEnd
+  dependsOn:
+  - AlmOctanePipelineStart
+  - A
+  - B
+  - C
+  condition: always()
+  steps:
+  - bash: echo "AlmOctanePipelineEnd"
